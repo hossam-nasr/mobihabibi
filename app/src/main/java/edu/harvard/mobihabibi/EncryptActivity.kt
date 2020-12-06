@@ -11,10 +11,12 @@ import android.provider.MediaStore
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.Toast
 
 class EncryptActivity : AppCompatActivity() {
     private var secretBitmap: Bitmap? = null
     private var decoyBitmap: Bitmap? = null
+    private var resBitmap: Bitmap? = null
 
     companion object {
         private const val SECRET_PICK_CODE = 999
@@ -35,7 +37,7 @@ class EncryptActivity : AppCompatActivity() {
             requestDecoy()
         }
         btnEncrypt.setOnClickListener {
-            encrypt()
+            requestEnc()
         }
     }
 
@@ -81,7 +83,16 @@ class EncryptActivity : AppCompatActivity() {
         startActivityForResult(intent, code)
     }
 
-    private fun encrypt() {
+    private fun requestEnc() {
+        if (secretBitmap != null && decoyBitmap != null) {
+            resBitmap = encrypt(secretBitmap!!, decoyBitmap!!)
+            findViewById<ImageView>(R.id.ivEncRes).setImageBitmap(resBitmap)
+        } else {
+            Toast.makeText(this, "Please upload a secret and a decoy!", Toast.LENGTH_LONG).show()
+        }
+    }
 
+    private fun encrypt(secretImg: Bitmap, decoyImg: Bitmap): Bitmap {
+        return decoyImg
     }
 }
