@@ -20,7 +20,7 @@ class EncryptActivity : AppCompatActivity() {
 
     companion object {
         private const val SECRET_PICK_CODE = 999
-        private const val DECOY_PICK_CODE = 1000
+        private const val DECOY_PICK_CODE = 998
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
