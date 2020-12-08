@@ -3,9 +3,11 @@ package edu.harvard.mobihabibi
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Button
@@ -13,6 +15,9 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import java.io.File
+import java.io.FileOutputStream
+import java.util.*
 
 
 class EncryptActivity : AppCompatActivity() {
@@ -89,10 +94,39 @@ class EncryptActivity : AppCompatActivity() {
     private fun requestEnc() {
         if (secretBitmap != null && decoyBitmap != null) {
             resBitmap = encrypt(secretBitmap!!, decoyBitmap!!)
-            MediaStore.Images.Media.insertImage(getContentResolver(), resBitmap, "Hidden", "yourDescription");
+            saveImage()
             findViewById<ImageView>(R.id.ivEncRes).setImageBitmap(resBitmap)
         } else {
             Toast.makeText(this, "Please upload a secret and a decoy!", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun saveImage() {
+        val root = Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES
+        ).toString()
+        val myDir = File(root)
+        myDir.mkdirs()
+
+        val fname = "${System.currentTimeMillis()}.png"
+        val file = File(myDir, fname)
+        if (file.exists()) file.delete()
+        try {
+            val out = FileOutputStream(file)
+            resBitmap!!.compress(Bitmap.CompressFormat.PNG, 100, out)
+            out.flush()
+            out.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // Tell the media scanner about the new file so that it is
+        // immediately available to the user.
+        MediaScannerConnection.scanFile(
+            this, arrayOf(file.toString()), null
+        ) { path, uri ->
+            Log.i("ExternalStorage", "Scanned $path:")
+            Log.i("ExternalStorage", "-> uri=$uri")
         }
     }
 
@@ -114,7 +148,7 @@ class EncryptActivity : AppCompatActivity() {
         return listOf(A, R, G, B)
     }
 
-    private fun mergeOneNum(num1 : Int, num2: Int): Int {
+    private fun mergeOneNum(num1: Int, num2: Int): Int {
         val right = num1 and 0xf0
         val left = (num2 and 0xf0) shr 4
         return right or left
@@ -131,9 +165,14 @@ class EncryptActivity : AppCompatActivity() {
     private fun encrypt(secretImg: Bitmap, decoyImg: Bitmap): Bitmap {
         if (secretImg.height > decoyImg.height || secretImg.width > decoyImg.width) {
             // Error: Please pick a different decoy image that is strictly bigger in size.
-            Toast.makeText(this, "Please pick a different decoy image that is strictly bigger in size.", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                "Please pick a different decoy image that is strictly bigger in size.",
+                Toast.LENGTH_LONG
+            ).show()
             return secretImg
         }
+
 
         val coverImg = Bitmap.createBitmap(null, decoyImg.width, decoyImg.height, decoyImg.config)
         for (w in 0 until coverImg.width) {
