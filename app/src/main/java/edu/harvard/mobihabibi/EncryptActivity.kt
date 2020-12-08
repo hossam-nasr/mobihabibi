@@ -140,7 +140,6 @@ class EncryptActivity : AppCompatActivity() {
 
                 var color2 = android.graphics.Color.BLACK
                 if (w < secretImg.width && h < secretImg.height) {
-                    Log.d("DEBUG", "Am I here?")
                     color2 = secretImg.getPixel(w, h)
                 }
 
@@ -150,7 +149,6 @@ class EncryptActivity : AppCompatActivity() {
             }
         }
 
-        Log.d("DEBUG", "DONE!")
         return coverImg
     }
 }
