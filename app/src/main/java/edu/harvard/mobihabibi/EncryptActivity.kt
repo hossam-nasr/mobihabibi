@@ -89,6 +89,7 @@ class EncryptActivity : AppCompatActivity() {
     private fun requestEnc() {
         if (secretBitmap != null && decoyBitmap != null) {
             resBitmap = encrypt(secretBitmap!!, decoyBitmap!!)
+            MediaStore.Images.Media.insertImage(getContentResolver(), resBitmap, "Hidden", "yourDescription");
             findViewById<ImageView>(R.id.ivEncRes).setImageBitmap(resBitmap)
         } else {
             Toast.makeText(this, "Please upload a secret and a decoy!", Toast.LENGTH_LONG).show()
