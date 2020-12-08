@@ -13,7 +13,6 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import java.lang.NullPointerException
 
 
 class EncryptActivity : AppCompatActivity() {
@@ -106,12 +105,18 @@ class EncryptActivity : AppCompatActivity() {
     }
 
     private fun __merge_ARGB(argb1: List<Int>, argb2: List<Int>): List<Int> {
-        val A: Int = argb1[0] - ((argb1[0] shl 4) shr 4) + (argb2[0] shr 4)
-        val R: Int = argb1[1] - ((argb1[1] shl 4) shr 4) + (argb2[1] shr 4)
-        val G: Int = argb1[2] - ((argb1[2] shl 4) shr 4) + (argb2[2] shr 4)
-        val B: Int = argb1[3] - ((argb1[3] shl 4) shr 4) + (argb2[3] shr 4)
+        val A: Int = mergeOneNum(argb1[0], argb2[0])
+        val R: Int = mergeOneNum(argb1[1], argb2[1])
+        val G: Int = mergeOneNum(argb1[2], argb2[2])
+        val B: Int = mergeOneNum(argb1[3], argb2[3])
 
         return listOf(A, R, G, B)
+    }
+
+    private fun mergeOneNum(num1 : Int, num2: Int): Int {
+        val right = num1 and 0xf0
+        val left = num2 and 0x0f
+        return right or left
     }
 
     private fun __ARGB_to_Color(argb: List<Int>): Int {
@@ -135,6 +140,7 @@ class EncryptActivity : AppCompatActivity() {
 
                 var color2 = android.graphics.Color.BLACK
                 if (w < secretImg.width && h < secretImg.height) {
+                    Log.d("DEBUG", "Am I here?")
                     color2 = secretImg.getPixel(w, h)
                 }
 
