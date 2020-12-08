@@ -68,7 +68,10 @@ class DecryptActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun decrypt(img: Bitmap): Bitmap {
-        val decryptedImg = Bitmap.createBitmap(null, img.width, img.height, img.config)
+        var decryptedImg = Bitmap.createBitmap(null, img.width, img.height, img.config)
+
+        var crop_h = img.height
+        var crop_w = img.width
 
         for (w in 0 until img.width) {
             for (h in 0 until img.height) {
@@ -88,8 +91,16 @@ class DecryptActivity : AppCompatActivity() {
                     newA and 0xff shl 24 or (newR and 0xff shl 16) or (newG and 0xff shl 8) or (newB and 0xff)
 
                 decryptedImg.setPixel(w, h, newColor)
+
+                if (!(newR == 0 && newG == 0 && newB == 0)) {
+                    crop_h = h + 1
+                    crop_w = w + 1
+                }
+
             }
         }
+
+        decryptedImg = Bitmap.createBitmap(decryptedImg, 0,0,crop_w, crop_h);
 
         return decryptedImg
     }
