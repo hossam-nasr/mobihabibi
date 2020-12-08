@@ -130,6 +130,7 @@ class EncryptActivity : AppCompatActivity() {
     private fun encrypt(secretImg: Bitmap, decoyImg: Bitmap): Bitmap {
         if (secretImg.height > decoyImg.height || secretImg.width > decoyImg.width) {
             // Error: Please pick a different decoy image that is strictly bigger in size.
+            Toast.makeText(this, "Please pick a different decoy image that is strictly bigger in size.", Toast.LENGTH_LONG).show()
             return secretImg
         }
 
