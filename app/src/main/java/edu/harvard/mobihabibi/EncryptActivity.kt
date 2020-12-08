@@ -116,7 +116,7 @@ class EncryptActivity : AppCompatActivity() {
 
     private fun mergeOneNum(num1 : Int, num2: Int): Int {
         val right = num1 and 0xf0
-        val left = num2 and 0x0f
+        val left = (num2 and 0xf0) shr 4
         return right or left
     }
 
