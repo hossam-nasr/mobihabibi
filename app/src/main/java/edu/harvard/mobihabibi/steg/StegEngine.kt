@@ -94,23 +94,14 @@ class StegEngine(private val context: Context, private val progressBar: Progress
             for (h in 0 until img.height) {
                 processedPixels++
                 val color = img.getPixel(w, h)
-
-                val A = color shr 24 and 0xff
-                val R = color shr 16 and 0xff
-                val G = color shr 8 and 0xff
-                val B = color and 0xff
-
-                val newA = (A and 0x0f) shl 4
-                val newR = (R and 0x0f) shl 4
-                val newG = (G and 0x0f) shl 4
-                val newB = (B and 0x0f) shl 4
-
-                val newColor =
-                    newA and 0xff shl 24 or (newR and 0xff shl 16) or (newG and 0xff shl 8) or (newB and 0xff)
-
+                val argb = colorToRgb(color)
+                val newArgb = argb.map {
+                    (it and 0x0f) shl 4
+                }
+                val newColor = argbToColor(newArgb)
                 decryptedImg.setPixel(w, h, newColor)
 
-                if (!(newR == 0 && newG == 0 && newB == 0)) {
+                if (!(newArgb[1] == 0 && newArgb[2] == 0 && newArgb[3] == 0)) {
                     crop_h = h + 1
                     crop_w = w + 1
                 }
