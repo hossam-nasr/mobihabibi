@@ -18,6 +18,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import edu.harvard.mobihabibi.img.ImageEngine
 import edu.harvard.mobihabibi.steg.StegEngine
 import java.io.File
 import java.io.FileOutputStream
@@ -30,6 +31,7 @@ class EncryptActivity : AppCompatActivity() {
     private var resBitmap: Bitmap? = null
     private lateinit var progressBar: ProgressBar
     private lateinit var stegEngine: StegEngine
+    private lateinit var imgEngine: ImageEngine
 
     companion object {
         private const val SECRET_PICK_CODE = 999
@@ -45,8 +47,7 @@ class EncryptActivity : AppCompatActivity() {
         val btnEncrypt = findViewById<Button>(R.id.btnEncRes)
         progressBar = findViewById(R.id.pbEnc)
         stegEngine = StegEngine(this, progressBar)
-        // progressBar.progress = 0
-        // progressBar.visibility = View.GONE
+        imgEngine = ImageEngine(this)
         btnUploadSecret.setOnClickListener {
             requestSecret()
         }
@@ -100,14 +101,13 @@ class EncryptActivity : AppCompatActivity() {
         startActivityForResult(intent, code)
     }
 
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun requestEnc() {
         if (secretBitmap != null && decoyBitmap != null) {
             progressBar.visibility = View.VISIBLE
             thread {
                 resBitmap = stegEngine.encrypt(secretBitmap!!, decoyBitmap!!)
                 if (resBitmap != null) {
-                    saveImage()
+                    imgEngine.saveImage(resBitmap!!)
                     runOnUiThread {
                         findViewById<ImageView>(R.id.ivEncRes).setImageBitmap(resBitmap)
                     }
@@ -118,32 +118,4 @@ class EncryptActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveImage() {
-        val root = Environment.getExternalStoragePublicDirectory(
-            Environment.DIRECTORY_PICTURES
-        ).toString()
-        val myDir = File(root)
-        myDir.mkdirs()
-
-        val fname = "${System.currentTimeMillis()}.png"
-        val file = File(myDir, fname)
-        if (file.exists()) file.delete()
-        try {
-            val out = FileOutputStream(file)
-            resBitmap!!.compress(Bitmap.CompressFormat.PNG, 100, out)
-            out.flush()
-            out.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        // Tell the media scanner about the new file so that it is
-        // immediately available to the user.
-        MediaScannerConnection.scanFile(
-            this, arrayOf(file.toString()), null
-        ) { path, uri ->
-            Log.i("ExternalStorage", "Scanned $path:")
-            Log.i("ExternalStorage", "-> uri=$uri")
-        }
-    }
 }
