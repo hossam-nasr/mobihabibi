@@ -80,4 +80,52 @@ class StegEngine(private val context: Context, private val progressBar: Progress
 
         return coverImg
     }
+
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    fun decrypt(img: Bitmap): Bitmap {
+        var decryptedImg = Bitmap.createBitmap(null, img.width, img.height, img.config)
+
+        var crop_h = img.height
+        var crop_w = img.width
+
+        val totalPixels = img.width * img.height
+        var processedPixels = 0
+        for (w in 0 until img.width) {
+            for (h in 0 until img.height) {
+                processedPixels++
+                val color = img.getPixel(w, h)
+
+                val A = color shr 24 and 0xff
+                val R = color shr 16 and 0xff
+                val G = color shr 8 and 0xff
+                val B = color and 0xff
+
+                val newA = (A and 0x0f) shl 4
+                val newR = (R and 0x0f) shl 4
+                val newG = (G and 0x0f) shl 4
+                val newB = (B and 0x0f) shl 4
+
+                val newColor =
+                    newA and 0xff shl 24 or (newR and 0xff shl 16) or (newG and 0xff shl 8) or (newB and 0xff)
+
+                decryptedImg.setPixel(w, h, newColor)
+
+                if (!(newR == 0 && newG == 0 && newB == 0)) {
+                    crop_h = h + 1
+                    crop_w = w + 1
+                }
+
+                if (processedPixels % 20 == 0 || processedPixels == totalPixels) {
+                    (context as Activity).runOnUiThread {
+                        progressBar.progress = (processedPixels * 100) / totalPixels
+                    }
+                }
+
+            }
+        }
+
+        decryptedImg = Bitmap.createBitmap(decryptedImg, 0, 0, crop_w, crop_h);
+
+        return decryptedImg
+    }
 }
