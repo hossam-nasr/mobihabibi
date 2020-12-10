@@ -9,14 +9,17 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import kotlin.concurrent.thread
 
 
 class DecryptActivity : AppCompatActivity() {
     private var stegoImg: Bitmap? = null
     private var recoveredImg: Bitmap? = null
+    private lateinit var progressBar: ProgressBar
 
     companion object {
         private const val STEGO_PICK_CODE = 997
@@ -28,6 +31,8 @@ class DecryptActivity : AppCompatActivity() {
 
         val btnUploadSteg = findViewById<Button>(R.id.btnUploadSteg)
         val btnDecRes = findViewById<Button>(R.id.btnDecRes)
+        progressBar = findViewById(R.id.pbDec)
+        progressBar.progress = 0
         btnUploadSteg.setOnClickListener {
             requestStegImg()
         }
@@ -59,8 +64,13 @@ class DecryptActivity : AppCompatActivity() {
 
     private fun requestDec() {
         if (stegoImg != null) {
-            recoveredImg = decrypt(stegoImg!!)
-            findViewById<ImageView>(R.id.ivDecRes).setImageBitmap(recoveredImg)
+            thread {
+                recoveredImg = decrypt(stegoImg!!)
+                runOnUiThread {
+                    findViewById<ImageView>(R.id.ivDecRes).setImageBitmap(recoveredImg)
+                }
+            }
+
         } else {
             Toast.makeText(this, "Please upload an image to recover from", Toast.LENGTH_LONG).show()
         }
@@ -73,8 +83,11 @@ class DecryptActivity : AppCompatActivity() {
         var crop_h = img.height
         var crop_w = img.width
 
+        val totalPixels = img.width * img.height
+        var processedPixels = 0
         for (w in 0 until img.width) {
             for (h in 0 until img.height) {
+                processedPixels++
                 val color = img.getPixel(w, h)
 
                 val A = color shr 24 and 0xff
@@ -95,6 +108,12 @@ class DecryptActivity : AppCompatActivity() {
                 if (!(newR == 0 && newG == 0 && newB == 0)) {
                     crop_h = h + 1
                     crop_w = w + 1
+                }
+
+                if (processedPixels % 20 == 0 || processedPixels == totalPixels) {
+                    runOnUiThread {
+                        progressBar.progress = (processedPixels * 100) / totalPixels
+                    }
                 }
 
             }
