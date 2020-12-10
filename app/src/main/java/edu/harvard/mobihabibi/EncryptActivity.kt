@@ -106,9 +106,11 @@ class EncryptActivity : AppCompatActivity() {
             progressBar.visibility = View.VISIBLE
             thread {
                 resBitmap = stegEngine.encrypt(secretBitmap!!, decoyBitmap!!)
-                saveImage()
-                runOnUiThread {
-                    findViewById<ImageView>(R.id.ivEncRes).setImageBitmap(resBitmap)
+                if (resBitmap != null) {
+                    saveImage()
+                    runOnUiThread {
+                        findViewById<ImageView>(R.id.ivEncRes).setImageBitmap(resBitmap)
+                    }
                 }
             }
         } else {

@@ -43,16 +43,15 @@ class StegEngine(private val context: Context, private val progressBar: Progress
     private fun argbToColor(argb: List<Int>): Int =
         argb[0] and 0xff shl 24 or (argb[1] and 0xff shl 16) or (argb[2] and 0xff shl 8) or (argb[3] and 0xff)
 
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    fun encrypt(secretImg: Bitmap, decoyImg: Bitmap): Bitmap {
+    fun encrypt(secretImg: Bitmap, decoyImg: Bitmap): Bitmap? {
         if (secretImg.height > decoyImg.height || secretImg.width > decoyImg.width) {
             // Error: Please pick a different decoy image that is strictly bigger in size.
             Toast.makeText(
                 context,
-                "Please pick a different decoy image that is strictly bigger in size.",
+                "Please pick a different decoy image that is bigger in size than the secret",
                 Toast.LENGTH_LONG
             ).show()
-            return secretImg
+            return null
         }
 
         val coverImg = Bitmap.createBitmap(null, decoyImg.width, decoyImg.height, decoyImg.config)
@@ -81,7 +80,6 @@ class StegEngine(private val context: Context, private val progressBar: Progress
         return coverImg
     }
 
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     fun decrypt(img: Bitmap): Bitmap {
         var decryptedImg = Bitmap.createBitmap(null, img.width, img.height, img.config)
 
