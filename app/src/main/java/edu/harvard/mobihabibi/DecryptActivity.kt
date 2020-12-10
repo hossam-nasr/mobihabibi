@@ -13,6 +13,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import edu.harvard.mobihabibi.steg.StegEngine
 import kotlin.concurrent.thread
 
 
@@ -20,6 +21,7 @@ class DecryptActivity : AppCompatActivity() {
     private var stegoImg: Bitmap? = null
     private var recoveredImg: Bitmap? = null
     private lateinit var progressBar: ProgressBar
+    private lateinit var stegEngine: StegEngine
 
     companion object {
         private const val STEGO_PICK_CODE = 997
@@ -32,7 +34,7 @@ class DecryptActivity : AppCompatActivity() {
         val btnUploadSteg = findViewById<Button>(R.id.btnUploadSteg)
         val btnDecRes = findViewById<Button>(R.id.btnDecRes)
         progressBar = findViewById(R.id.pbDec)
-        progressBar.progress = 0
+        stegEngine = StegEngine(this, progressBar)
         btnUploadSteg.setOnClickListener {
             requestStegImg()
         }
@@ -65,7 +67,7 @@ class DecryptActivity : AppCompatActivity() {
     private fun requestDec() {
         if (stegoImg != null) {
             thread {
-                recoveredImg = decrypt(stegoImg!!)
+                recoveredImg = stegEngine.decrypt(stegoImg!!)
                 runOnUiThread {
                     findViewById<ImageView>(R.id.ivDecRes).setImageBitmap(recoveredImg)
                 }
@@ -74,53 +76,5 @@ class DecryptActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "Please upload an image to recover from", Toast.LENGTH_LONG).show()
         }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    private fun decrypt(img: Bitmap): Bitmap {
-        var decryptedImg = Bitmap.createBitmap(null, img.width, img.height, img.config)
-
-        var crop_h = img.height
-        var crop_w = img.width
-
-        val totalPixels = img.width * img.height
-        var processedPixels = 0
-        for (w in 0 until img.width) {
-            for (h in 0 until img.height) {
-                processedPixels++
-                val color = img.getPixel(w, h)
-
-                val A = color shr 24 and 0xff
-                val R = color shr 16 and 0xff
-                val G = color shr 8 and 0xff
-                val B = color and 0xff
-
-                val newA = (A and 0x0f) shl 4
-                val newR = (R and 0x0f) shl 4
-                val newG = (G and 0x0f) shl 4
-                val newB = (B and 0x0f) shl 4
-
-                val newColor =
-                    newA and 0xff shl 24 or (newR and 0xff shl 16) or (newG and 0xff shl 8) or (newB and 0xff)
-
-                decryptedImg.setPixel(w, h, newColor)
-
-                if (!(newR == 0 && newG == 0 && newB == 0)) {
-                    crop_h = h + 1
-                    crop_w = w + 1
-                }
-
-                if (processedPixels % 20 == 0 || processedPixels == totalPixels) {
-                    runOnUiThread {
-                        progressBar.progress = (processedPixels * 100) / totalPixels
-                    }
-                }
-
-            }
-        }
-
-        decryptedImg = Bitmap.createBitmap(decryptedImg, 0,0,crop_w, crop_h);
-
-        return decryptedImg
     }
 }
