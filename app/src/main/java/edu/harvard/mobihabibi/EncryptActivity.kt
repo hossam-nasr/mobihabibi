@@ -5,25 +5,29 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaScannerConnection
 import android.net.Uri
+import android.opengl.Visibility
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 import java.io.FileOutputStream
-import java.util.*
+import kotlin.concurrent.thread
 
 
 class EncryptActivity : AppCompatActivity() {
     private var secretBitmap: Bitmap? = null
     private var decoyBitmap: Bitmap? = null
     private var resBitmap: Bitmap? = null
+    private lateinit var progressBar: ProgressBar
 
     companion object {
         private const val SECRET_PICK_CODE = 999
@@ -37,6 +41,9 @@ class EncryptActivity : AppCompatActivity() {
         val btnUploadSecret = findViewById<Button>(R.id.btnUploadSecret)
         val btnUploadDecoy = findViewById<Button>(R.id.btnUploadDecoy)
         val btnEncrypt = findViewById<Button>(R.id.btnEncRes)
+        progressBar = findViewById(R.id.pbEnc)
+        progressBar.progress = 0
+        // progressBar.visibility = View.GONE
         btnUploadSecret.setOnClickListener {
             requestSecret()
         }
@@ -93,9 +100,14 @@ class EncryptActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun requestEnc() {
         if (secretBitmap != null && decoyBitmap != null) {
-            resBitmap = encrypt(secretBitmap!!, decoyBitmap!!)
-            saveImage()
-            findViewById<ImageView>(R.id.ivEncRes).setImageBitmap(resBitmap)
+            progressBar.visibility = View.VISIBLE
+            thread {
+                resBitmap = encrypt(secretBitmap!!, decoyBitmap!!)
+                saveImage()
+                runOnUiThread {
+                    findViewById<ImageView>(R.id.ivEncRes).setImageBitmap(resBitmap)
+                }
+            }
         } else {
             Toast.makeText(this, "Please upload a secret and a decoy!", Toast.LENGTH_LONG).show()
         }
@@ -175,8 +187,11 @@ class EncryptActivity : AppCompatActivity() {
 
 
         val coverImg = Bitmap.createBitmap(null, decoyImg.width, decoyImg.height, decoyImg.config)
+        val totalPixels = coverImg.width * coverImg.height
+        var pixelsProcessed = 0
         for (w in 0 until coverImg.width) {
             for (h in 0 until coverImg.height) {
+                pixelsProcessed++
                 val color1 = decoyImg.getPixel(w, h)
 
                 var color2 = android.graphics.Color.BLACK
@@ -187,6 +202,12 @@ class EncryptActivity : AppCompatActivity() {
                 val newColor =
                     __ARGB_to_Color(__merge_ARGB(__Color_to_ARGB(color1), __Color_to_ARGB(color2)))
                 coverImg.setPixel(w, h, newColor)
+
+                if (pixelsProcessed % 20 == 0 || pixelsProcessed == totalPixels) {
+                    runOnUiThread {
+                        progressBar.progress = (pixelsProcessed * 100) / totalPixels
+                    }
+                }
             }
         }
 
