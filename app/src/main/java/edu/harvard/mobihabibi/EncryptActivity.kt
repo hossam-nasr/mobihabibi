@@ -43,6 +43,8 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
     private var decoyBitmap: Bitmap? = null
     private var decoyFile: File? = null
     private var resBitmap: Bitmap? = null
+    private var progressTicks: Int = 0
+    private val totalTicks: Int = 13
     private lateinit var progressBar: ProgressBar
     private lateinit var stegEngine: StegEngine
     private lateinit var imgEngine: ImageEngine
@@ -149,6 +151,7 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
                     decoyBitmap!!.height,
                     decoyBitmap!!.config
                 )
+                onProgressTick()
                 if (outputFile != null) {
                     val fos = FileOutputStream(outputFile)
                     val jpg = JpegEncoder(
@@ -161,6 +164,7 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
                     )
                     val secretByteStream = ByteArrayOutputStream()
                     secretBitmap!!.compress(Bitmap.CompressFormat.PNG, 60, secretByteStream)
+                    onProgressTick()
                     val success = jpg.Compress(ByteArrayInputStream(secretByteStream.toByteArray()))
                     if (success) {
                         MediaScannerConnection.scanFile(
@@ -170,6 +174,7 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
                             Log.i("ExternalStorage", "-> uri=$uri")
                         }
                         Log.d("DEBUG", "Success")
+                        onProgressTick()
                     } else {
                         Log.d("DEBUG", "Failure")
                     }
@@ -214,6 +219,14 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
 
     override fun onUpdate(with_message: String?) {
         Log.d("DEBUG", "UPDATE WITH MESSAGE $with_message")
+        onProgressTick()
+    }
+
+    private fun onProgressTick() {
+        progressTicks++
+        runOnUiThread {
+            progressBar.progress = (progressTicks * 100) / totalTicks
+        }
     }
 
 }
