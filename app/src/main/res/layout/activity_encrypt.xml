@@ -53,14 +53,15 @@
             app:layout_constraintTop_toBottomOf="@+id/ivSecret" />
 
         <Button
-            android:id="@+id/btnUploadDecoy"
+            android:id="@+id/btnCaptureDecoy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Upload"
+            android:text="Capture"
             app:layout_constraintBottom_toBottomOf="@+id/tvInside"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tvInside" />
+            app:layout_constraintEnd_toStartOf="@+id/btnUploadDecoy"
+            app:layout_constraintStart_toEndOf="@+id/tvInside"
+            app:layout_constraintTop_toTopOf="@+id/tvInside"
+            app:layout_constraintVertical_bias="0.517" />
 
         <ImageView
             android:id="@+id/ivDecoy"
@@ -69,7 +70,7 @@
             android:layout_marginTop="20dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnUploadDecoy"
+            app:layout_constraintTop_toBottomOf="@+id/btnCaptureDecoy"
             tools:srcCompat="@tools:sample/avatars" />
 
         <Button
@@ -102,5 +103,16 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btnEncRes" />
+
+        <Button
+            android:id="@+id/btnUploadDecoy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="40dp"
+            android:text="Upload"
+            app:layout_constraintBottom_toBottomOf="@+id/btnCaptureDecoy"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/btnCaptureDecoy" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

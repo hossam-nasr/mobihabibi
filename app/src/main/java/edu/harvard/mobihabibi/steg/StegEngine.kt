@@ -46,11 +46,13 @@ class StegEngine(private val context: Context, private val progressBar: Progress
     fun encrypt(secretImg: Bitmap, decoyImg: Bitmap): Bitmap? {
         if (secretImg.height > decoyImg.height || secretImg.width > decoyImg.width) {
             // Error: Please pick a different decoy image that is strictly bigger in size.
-            Toast.makeText(
-                context,
-                "Please pick a different decoy image that is bigger in size than the secret",
-                Toast.LENGTH_LONG
-            ).show()
+            (context as Activity).runOnUiThread {
+                Toast.makeText(
+                    context,
+                    "Please pick a different decoy image that is bigger in size than the secret",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
             return null
         }
 
