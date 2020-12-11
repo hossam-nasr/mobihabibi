@@ -35,6 +35,7 @@ import kotlin.concurrent.thread
 class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
     // Storage Permissions
     private val REQUEST_EXTERNAL_STORAGE = 1
+    private val REQUEST_IMAGE_CAPTURE = 2
     private val PERMISSIONS_STORAGE = arrayOf(
         Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -65,6 +66,7 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
         progressBar = findViewById(R.id.pbEnc)
         stegEngine = StegEngine(this, progressBar)
         imgEngine = ImageEngine(this)
+        verifyStoragePermissions(this)
         btnUploadSecret.setOnClickListener {
             requestSecret()
         }
