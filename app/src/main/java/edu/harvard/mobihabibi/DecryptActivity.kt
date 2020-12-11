@@ -26,7 +26,8 @@ import java.security.spec.ECField
 import kotlin.concurrent.thread
 
 
-class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener, PluginNotificationListener {
+class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener,
+    PluginNotificationListener {
     private var stegoImg: Bitmap? = null
     private var stegoFile: File? = null
     private var recoveredImg: Bitmap? = null
@@ -121,6 +122,11 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener, PluginN
             if (recoveredImg != null) {
                 runOnUiThread {
                     findViewById<ImageView>(R.id.ivDecRes).setImageBitmap(recoveredImg)
+                    Toast.makeText(
+                        this,
+                        "Image recovered successfully! Recovered image stored in the Pictures directory",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
                 imgEngine.saveImage(recoveredImg!!)
                 onProgressTick()
@@ -130,6 +136,10 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener, PluginN
 
     override fun onFailure() {
         Log.d("DEBUG", "FAILURE")
+        runOnUiThread {
+            Toast.makeText(this, "Error: could not extract hidden image :(", Toast.LENGTH_LONG)
+                .show()
+        }
     }
 
     override fun onUpdate(with_message: String?) {

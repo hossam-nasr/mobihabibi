@@ -95,9 +95,7 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
                 }
                 findViewById<ImageView>(R.id.ivDecoy).setImageURI(decoyFile?.toUri())
             }
-        }
-
-        else if (resultCode == Activity.RESULT_OK) {
+        } else if (resultCode == Activity.RESULT_OK) {
             val uri = data?.data
             if (uri != null) {
                 when (requestCode) {
@@ -237,6 +235,23 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
                             Log.i("ExternalStorage", "Scanned $path:")
                             Log.i("ExternalStorage", "-> uri=$uri")
                         }
+                        if (decoyFile != null) {
+                            runOnUiThread {
+                                if (decoyFile!!.delete()) {
+                                    Toast.makeText(
+                                        this,
+                                        "Decoy has been successfully deleted and steganographic image saved in Pictures directory",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                } else {
+                                    Toast.makeText(
+                                        this,
+                                        "Decoy image could NOT be deleted, please delete it manually. Your steganographic image is saved in the Pictures directory",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        }
                         Log.d("DEBUG", "Success")
                         onProgressTick()
                     } else {
@@ -292,6 +307,9 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
 
     override fun onFailure() {
         Log.d("DEBUG", "FAILURE")
+        runOnUiThread {
+            Toast.makeText(this, "Error: Could not encrypt image :(", Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onUpdate(with_message: String?) {
