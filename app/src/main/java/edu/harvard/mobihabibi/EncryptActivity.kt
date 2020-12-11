@@ -162,8 +162,11 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
                         "Seed".toByteArray(),
                         StegoProcessThread()
                     )
+                    Log.d("DEBUG", "Quality is ${jpg.quality}")
+                    Log.d("DEBUG", "Jpg is $jpg")
+
                     val secretByteStream = ByteArrayOutputStream()
-                    secretBitmap!!.compress(Bitmap.CompressFormat.PNG, 60, secretByteStream)
+                    secretBitmap!!.compress(Bitmap.CompressFormat.JPEG, 100, secretByteStream)
                     onProgressTick()
                     val success = jpg.Compress(ByteArrayInputStream(secretByteStream.toByteArray()))
                     if (success) {
