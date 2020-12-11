@@ -5,9 +5,11 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
@@ -17,11 +19,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import edu.harvard.mobihabibi.img.ImageEngine
 import edu.harvard.mobihabibi.steg.StegEngine
+import info.guardianproject.f5android.plugins.PluginNotificationListener
+import info.guardianproject.f5android.plugins.f5.james.JpegEncoder
+import info.guardianproject.f5android.stego.StegoProcessThread
+import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.FileOutputStream
 import kotlin.concurrent.thread
 
+// import info.guardianproject.f5android.plugins.f5.james.JpegEncoder
 
-class EncryptActivity : AppCompatActivity() {
+
+class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
     // Storage Permissions
     private val REQUEST_EXTERNAL_STORAGE = 1
     private val PERMISSIONS_STORAGE = arrayOf(
@@ -59,7 +68,8 @@ class EncryptActivity : AppCompatActivity() {
             requestDecoy()
         }
         btnEncrypt.setOnClickListener {
-            requestEnc()
+            // requestEnc()
+            requestEncNewTest()
         }
     }
 
@@ -131,6 +141,49 @@ class EncryptActivity : AppCompatActivity() {
         }
     }
 
+    private fun requestEncNewTest() {
+        if (secretBitmap != null && decoyBitmap != null) {
+            progressBar.visibility = View.VISIBLE
+            thread {
+                val outputFile = createOutputFile(
+                    decoyBitmap!!.width,
+                    decoyBitmap!!.height,
+                    decoyBitmap!!.config
+                )
+                if (outputFile != null) {
+                    val fos = FileOutputStream(outputFile)
+                    val jpg = JpegEncoder(
+                        this,
+                        decoyBitmap!!,
+                        100,
+                        fos,
+                        "Seed".toByteArray(),
+                        StegoProcessThread()
+                    )
+                    val success = jpg.Compress(ByteArrayInputStream("Hello".toByteArray()))
+                    if (success) {
+                        MediaScannerConnection.scanFile(
+                            this, arrayOf(outputFile.toString()), null
+                        ) { path, uri ->
+                            Log.i("ExternalStorage", "Scanned $path:")
+                            Log.i("ExternalStorage", "-> uri=$uri")
+                        }
+                        Log.d("DEBUG", "Success")
+                    } else {
+                        Log.d("DEBUG", "Failure")
+                    }
+                    fos.close()
+                }
+
+            }
+        }
+
+    }
+
+    private fun createOutputFile(width: Int, height: Int, config: Bitmap.Config): File? {
+        return imgEngine.saveImage(Bitmap.createBitmap(null, width, height, config))
+    }
+
     /**
      * Checks if the app has permission to write to device storage
      *
@@ -152,6 +205,14 @@ class EncryptActivity : AppCompatActivity() {
                 REQUEST_EXTERNAL_STORAGE
             )
         }
+    }
+
+    override fun onFailure() {
+        Log.d("DEBUG", "FAILURE")
+    }
+
+    override fun onUpdate(with_message: String?) {
+        Log.d("DEBUG", "UPDATE WITH MESSAGE $with_message")
     }
 
 }

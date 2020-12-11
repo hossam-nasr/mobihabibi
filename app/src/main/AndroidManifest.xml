@@ -20,7 +20,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MobiHabibi"
-        tools:ignore="HardcodedDebugMode">
+        tools:ignore="HardcodedDebugMode"
+        tools:replace="android:icon,android:theme">
         <activity android:name=".DecryptActivity" />
         <activity android:name=".EncryptActivity" />
         <activity android:name=".MainActivity">
