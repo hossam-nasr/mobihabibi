@@ -30,6 +30,8 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener, PluginN
     private var stegoImg: Bitmap? = null
     private var stegoFile: File? = null
     private var recoveredImg: Bitmap? = null
+    private var progressTicks: Int = 0
+    private val totalTicks: Int = 9
     private lateinit var progressBar: ProgressBar
     private lateinit var stegEngine: StegEngine
     private lateinit var imgEngine: ImageEngine
@@ -121,6 +123,7 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener, PluginN
                     findViewById<ImageView>(R.id.ivDecRes).setImageBitmap(recoveredImg)
                 }
                 imgEngine.saveImage(recoveredImg!!)
+                onProgressTick()
             }
         }
     }
@@ -131,5 +134,13 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener, PluginN
 
     override fun onUpdate(with_message: String?) {
         Log.d("DEBUG", "Update with message $with_message")
+        onProgressTick()
+    }
+
+    private fun onProgressTick() {
+        progressTicks++
+        runOnUiThread {
+            progressBar.progress = (progressTicks * 100) / totalTicks
+        }
     }
 }
