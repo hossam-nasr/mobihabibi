@@ -13,6 +13,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import edu.harvard.mobihabibi.img.ImageEngine
 import edu.harvard.mobihabibi.steg.StegEngine
 import kotlin.concurrent.thread
 
@@ -22,6 +23,7 @@ class DecryptActivity : AppCompatActivity() {
     private var recoveredImg: Bitmap? = null
     private lateinit var progressBar: ProgressBar
     private lateinit var stegEngine: StegEngine
+    private lateinit var imgEngine: ImageEngine
 
     companion object {
         private const val STEGO_PICK_CODE = 997
@@ -35,6 +37,7 @@ class DecryptActivity : AppCompatActivity() {
         val btnDecRes = findViewById<Button>(R.id.btnDecRes)
         progressBar = findViewById(R.id.pbDec)
         stegEngine = StegEngine(this, progressBar)
+        imgEngine = ImageEngine(this)
         btnUploadSteg.setOnClickListener {
             requestStegImg()
         }
@@ -68,8 +71,11 @@ class DecryptActivity : AppCompatActivity() {
         if (stegoImg != null) {
             thread {
                 recoveredImg = stegEngine.decrypt(stegoImg!!)
-                runOnUiThread {
-                    findViewById<ImageView>(R.id.ivDecRes).setImageBitmap(recoveredImg)
+                if (recoveredImg != null) {
+                    imgEngine.saveImage(recoveredImg!!)
+                    runOnUiThread {
+                        findViewById<ImageView>(R.id.ivDecRes).setImageBitmap(recoveredImg)
+                    }
                 }
             }
 
