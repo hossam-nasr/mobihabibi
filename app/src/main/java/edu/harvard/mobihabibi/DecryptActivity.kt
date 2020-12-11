@@ -139,6 +139,7 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener,
         runOnUiThread {
             Toast.makeText(this, "Error: could not extract hidden image :(", Toast.LENGTH_LONG)
                 .show()
+            progressBar.progress = 0
         }
     }
 

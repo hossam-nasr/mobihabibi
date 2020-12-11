@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Path
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
@@ -65,6 +64,7 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
 
         val btnUploadSecret = findViewById<Button>(R.id.btnUploadSecret)
         val btnUploadDecoy = findViewById<Button>(R.id.btnUploadDecoy)
+        val btnCaptureDecoy = findViewById<Button>(R.id.btnCaptureDecoy)
         val btnEncrypt = findViewById<Button>(R.id.btnEncRes)
         progressBar = findViewById(R.id.pbEnc)
         stegEngine = StegEngine(this, progressBar)
@@ -74,7 +74,9 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
             requestSecret()
         }
         btnUploadDecoy.setOnClickListener {
-            // requestDecoy()
+            requestDecoy()
+        }
+        btnCaptureDecoy.setOnClickListener {
             requestDecoyNewTest()
         }
         btnEncrypt.setOnClickListener {
@@ -309,6 +311,7 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
         Log.d("DEBUG", "FAILURE")
         runOnUiThread {
             Toast.makeText(this, "Error: Could not encrypt image :(", Toast.LENGTH_LONG).show()
+            progressBar.progress = 0
         }
     }
 
