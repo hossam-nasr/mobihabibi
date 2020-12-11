@@ -12,7 +12,6 @@ import android.os.Build
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
-import android.util.Log
 import org.apache.sanselan.ImageReadException
 import org.apache.sanselan.ImageWriteException
 import org.apache.sanselan.Sanselan
@@ -53,17 +52,29 @@ class ImageEngine(private val context: Context) {
         // Tell the media scanner about the new file so that it is
         // immediately available to the user.
         MediaScannerConnection.scanFile(
-            context, arrayOf(file.toString()), null
-        ) { path, uri ->
-            Log.i("ExternalStorage", "Scanned $path:")
-            Log.i("ExternalStorage", "-> uri=$uri")
-        }
+            context, arrayOf(file.toString()), null, null)
 
         if (successful) {
             return file
         }
         return null
     }
+
+    fun createOutputDecoyFile(callback: ((File) -> Unit)): File? {
+        val storageDir: File? = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(
+            "${System.currentTimeMillis()}", /* prefix */
+            ".jpg", /* suffix */
+            storageDir /* directory */
+        ).apply {
+            callback(this)
+        }
+    }
+
+    fun createOutputFile(width: Int, height: Int, config: Bitmap.Config): File? {
+        return saveImage(Bitmap.createBitmap(null, width, height, config))
+    }
+
 
     object ImageFilePath {
         var nopath = "Select Video Only"
@@ -281,11 +292,7 @@ class ImageEngine(private val context: Context) {
             // Tell the media scanner about the new file so that it is
             // immediately available to the user.
             MediaScannerConnection.scanFile(
-                context, arrayOf(tempFile.toString(), destFile.toString()), null
-            ) { path, uri ->
-                Log.i("ExternalStorage", "Scanned $path:")
-                Log.i("ExternalStorage", "-> uri=$uri")
-            }
+                context, arrayOf(tempFile.toString(), destFile.toString()), null, null)
             return true
         } catch (exception: ImageReadException) {
             exception.printStackTrace()
