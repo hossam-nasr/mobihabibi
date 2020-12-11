@@ -2,12 +2,16 @@ package edu.harvard.mobihabibi
 
 import android.Manifest
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Path
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
@@ -17,16 +21,14 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import edu.harvard.mobihabibi.img.ImageEngine
 import edu.harvard.mobihabibi.steg.StegEngine
 import info.guardianproject.f5android.plugins.PluginNotificationListener
 import info.guardianproject.f5android.plugins.f5.james.JpegEncoder
 import info.guardianproject.f5android.stego.StegoProcessThread
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
+import java.io.*
 import kotlin.concurrent.thread
 
 // import info.guardianproject.f5android.plugins.f5.james.JpegEncoder
@@ -44,6 +46,7 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
     private var secretBitmap: Bitmap? = null
     private var decoyBitmap: Bitmap? = null
     private var decoyFile: File? = null
+    private var decoyPath: String? = null
     private var resBitmap: Bitmap? = null
     private var progressTicks: Int = 0
     private val totalTicks: Int = 13
@@ -71,7 +74,8 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
             requestSecret()
         }
         btnUploadDecoy.setOnClickListener {
-            requestDecoy()
+            // requestDecoy()
+            requestDecoyNewTest()
         }
         btnEncrypt.setOnClickListener {
             // requestEnc()
@@ -80,7 +84,20 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (resultCode == Activity.RESULT_OK) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            decoyBitmap = data?.extras?.get("data") as Bitmap?
+            if (decoyBitmap != null) {
+                findViewById<ImageView>(R.id.ivDecoy).setImageBitmap(decoyBitmap)
+            } else {
+                Log.d("DEBUG", "Here decoyFile is $decoyFile")
+                if (decoyFile != null) {
+                    decoyBitmap = BitmapFactory.decodeFile(decoyFile.toString())
+                }
+                findViewById<ImageView>(R.id.ivDecoy).setImageURI(decoyFile?.toUri())
+            }
+        }
+
+        else if (resultCode == Activity.RESULT_OK) {
             val uri = data?.data
             if (uri != null) {
                 when (requestCode) {
@@ -108,6 +125,44 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
 
     private fun requestDecoy() {
         requestImage(DECOY_PICK_CODE)
+    }
+
+    private fun requestDecoyNewTest() {
+        Log.d("DEBUG", "Entering")
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        try {
+            Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
+                Log.d("DEBUG", "$takePictureIntent")
+                // Ensure that there's a camera activity to handle the intent
+                takePictureIntent.resolveActivity(packageManager)?.also {
+                    Log.d("DEBUG", "Here it is $it")
+                    // Create the File where the photo should go
+                    decoyFile = try {
+                        createOutputDecoyFile()
+                    } catch (ex: IOException) {
+                        // Error occurred while creating the File
+                        Log.d("DEBUG", "Error creating file for decoy for camera")
+                        null
+                    }
+                    // Continue only if the File was successfully created
+                    decoyFile?.also {
+                        val photoURI: Uri = FileProvider.getUriForFile(
+                            this,
+                            "com.example.android.fileprovider",
+                            it
+                        )
+//                        val photoUri = decoyFile!!.toUri()
+                        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+                        Log.d("DEBUG", "Here")
+                        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
+                    }
+                }
+            }
+//            startActivityForResult(intent, REQUEST_IMAGE_CAPTURE)
+        } catch (e: ActivityNotFoundException) {
+            // display error state to the user
+            Log.d("DEBUG", "Wtf bro why u have no camera")
+        }
     }
 
     private fun processDecoy(uri: Uri) {
@@ -166,7 +221,7 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
                         StegoProcessThread()
                     )
                     val secretByteStream = ByteArrayOutputStream()
-                    secretBitmap!!.compress(Bitmap.CompressFormat.JPEG, 100, secretByteStream)
+                    secretBitmap!!.compress(Bitmap.CompressFormat.JPEG, 60, secretByteStream)
                     onProgressTick()
                     val success = jpg.Compress(ByteArrayInputStream(secretByteStream.toByteArray()))
                     if (success) {
@@ -197,6 +252,19 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
 
     private fun createOutputFile(width: Int, height: Int, config: Bitmap.Config): File? {
         return imgEngine.saveImage(Bitmap.createBitmap(null, width, height, config))
+    }
+
+    private fun createOutputDecoyFile(): File? {
+        val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(
+            "${System.currentTimeMillis()}", /* prefix */
+            ".jpg", /* suffix */
+            storageDir /* directory */
+        ).apply {
+            // Save a file: path for use with ACTION_VIEW intents
+            Log.d("DEBUG", "File created with path $absolutePath")
+            decoyPath = absolutePath
+        }
     }
 
     /**
