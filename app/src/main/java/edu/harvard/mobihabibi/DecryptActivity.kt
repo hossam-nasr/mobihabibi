@@ -3,6 +3,7 @@ package edu.harvard.mobihabibi
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -31,6 +32,7 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener, PluginN
     private var recoveredImg: Bitmap? = null
     private lateinit var progressBar: ProgressBar
     private lateinit var stegEngine: StegEngine
+    private lateinit var imgEngine: ImageEngine
 
     companion object {
         private const val STEGO_PICK_CODE = 997
@@ -44,6 +46,7 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener, PluginN
         val btnDecRes = findViewById<Button>(R.id.btnDecRes)
         progressBar = findViewById(R.id.pbDec)
         stegEngine = StegEngine(this, progressBar)
+        imgEngine = ImageEngine(this)
         btnUploadSteg.setOnClickListener {
             requestStegImg()
         }
@@ -109,7 +112,17 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener, PluginN
     }
 
     override fun onExtractionResult(baos: ByteArrayOutputStream?) {
-        Log.d("DEBUG", "EXTRACTION RESULT IS $baos")
+        Log.d("DEBUG", "EXTRACTION RESULT SUCCESS")
+        val ba = baos?.toByteArray()
+        if (ba != null) {
+            recoveredImg = BitmapFactory.decodeByteArray(ba, 0, ba.size)
+            if (recoveredImg != null) {
+                runOnUiThread {
+                    findViewById<ImageView>(R.id.ivDecRes).setImageBitmap(recoveredImg)
+                }
+                imgEngine.saveImage(recoveredImg!!)
+            }
+        }
     }
 
     override fun onFailure() {

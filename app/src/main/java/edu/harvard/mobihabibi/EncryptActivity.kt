@@ -23,6 +23,7 @@ import info.guardianproject.f5android.plugins.PluginNotificationListener
 import info.guardianproject.f5android.plugins.f5.james.JpegEncoder
 import info.guardianproject.f5android.stego.StegoProcessThread
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.concurrent.thread
@@ -158,7 +159,9 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
                         "Seed".toByteArray(),
                         StegoProcessThread()
                     )
-                    val success = jpg.Compress(ByteArrayInputStream("Hello".toByteArray()))
+                    val secretByteStream = ByteArrayOutputStream()
+                    secretBitmap!!.compress(Bitmap.CompressFormat.PNG, 60, secretByteStream)
+                    val success = jpg.Compress(ByteArrayInputStream(secretByteStream.toByteArray()))
                     if (success) {
                         MediaScannerConnection.scanFile(
                             this, arrayOf(outputFile.toString()), null
