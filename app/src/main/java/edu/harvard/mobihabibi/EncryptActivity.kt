@@ -17,6 +17,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.net.toUri
 import edu.harvard.mobihabibi.img.ImageEngine
 import edu.harvard.mobihabibi.steg.StegEngine
 import info.guardianproject.f5android.plugins.PluginNotificationListener
@@ -167,6 +168,12 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
                     onProgressTick()
                     val success = jpg.Compress(ByteArrayInputStream(secretByteStream.toByteArray()))
                     if (success) {
+                        if (decoyFile != null) {
+                            imgEngine.copyExifData(decoyFile!!, outputFile, null)
+                        }
+                        runOnUiThread {
+                            findViewById<ImageView>(R.id.ivEncRes).setImageURI(outputFile.toUri())
+                        }
                         MediaScannerConnection.scanFile(
                             this, arrayOf(outputFile.toString()), null
                         ) { path, uri ->
