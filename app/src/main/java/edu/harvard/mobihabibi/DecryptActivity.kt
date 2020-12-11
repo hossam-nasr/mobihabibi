@@ -7,18 +7,27 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import edu.harvard.mobihabibi.img.ImageEngine
 import edu.harvard.mobihabibi.steg.StegEngine
+import info.guardianproject.f5android.plugins.PluginNotificationListener
+import info.guardianproject.f5android.plugins.f5.Extract
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.lang.Exception
+import java.security.spec.ECField
 import kotlin.concurrent.thread
 
 
-class DecryptActivity : AppCompatActivity() {
+class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener, PluginNotificationListener {
     private var stegoImg: Bitmap? = null
+    private var stegoFile: File? = null
     private var recoveredImg: Bitmap? = null
     private lateinit var progressBar: ProgressBar
     private lateinit var stegEngine: StegEngine
@@ -39,7 +48,8 @@ class DecryptActivity : AppCompatActivity() {
             requestStegImg()
         }
         btnDecRes.setOnClickListener {
-            requestDec()
+            // requestDec()
+            requestDecNewTest()
         }
     }
 
@@ -62,6 +72,10 @@ class DecryptActivity : AppCompatActivity() {
     private fun processStegImg(uri: Uri) {
         findViewById<ImageView>(R.id.ivStegImg).setImageURI(uri)
         stegoImg = MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
+        val path = ImageEngine.ImageFilePath.getPath(this, uri)
+        if (path != null) {
+            stegoFile = File(path)
+        }
     }
 
     private fun requestDec() {
@@ -76,5 +90,33 @@ class DecryptActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "Please upload an image to recover from", Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun requestDecNewTest() {
+        if (stegoFile != null) {
+            thread {
+                try {
+                    val extract = Extract(this, stegoFile!!, "Seed".toByteArray())
+                    extract.run()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+        } else {
+            Toast.makeText(this, "Please upload an image to recover from", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onExtractionResult(baos: ByteArrayOutputStream?) {
+        Log.d("DEBUG", "EXTRACTION RESULT IS $baos")
+    }
+
+    override fun onFailure() {
+        Log.d("DEBUG", "FAILURE")
+    }
+
+    override fun onUpdate(with_message: String?) {
+        Log.d("DEBUG", "Update with message $with_message")
     }
 }

@@ -107,11 +107,9 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
     private fun processDecoy(uri: Uri) {
         findViewById<ImageView>(R.id.ivDecoy).setImageURI(uri)
         decoyBitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
-        if (uri.path != null) {
-            val path = ImageEngine.ImageFilePath.getPath(this, uri)
-            if (path != null) {
-                decoyFile = File(path)
-            }
+        val path = ImageEngine.ImageFilePath.getPath(this, uri)
+        if (path != null) {
+            decoyFile = File(path)
         }
     }
 
