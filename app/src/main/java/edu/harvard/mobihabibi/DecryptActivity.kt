@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import edu.harvard.mobihabibi.img.ImageEngine
+import edu.harvard.mobihabibi.perm.PermissionsManager
 import edu.harvard.mobihabibi.steg.StegEngine
 import info.guardianproject.f5android.plugins.PluginNotificationListener
 import info.guardianproject.f5android.plugins.f5.Extract
@@ -36,6 +37,7 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener,
     private lateinit var progressBar: ProgressBar
     private lateinit var stegEngine: StegEngine
     private lateinit var imgEngine: ImageEngine
+    private lateinit var permManager: PermissionsManager
 
     companion object {
         private const val STEGO_PICK_CODE = 997
@@ -50,6 +52,8 @@ class DecryptActivity : AppCompatActivity(), Extract.ExtractionListener,
         progressBar = findViewById(R.id.pbDec)
         stegEngine = StegEngine(this, progressBar)
         imgEngine = ImageEngine(this)
+        permManager = PermissionsManager(this)
+        permManager.verifyStoragePermissions()
         btnUploadSteg.setOnClickListener {
             requestStegImg()
         }

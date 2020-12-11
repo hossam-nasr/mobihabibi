@@ -23,6 +23,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import edu.harvard.mobihabibi.img.ImageEngine
+import edu.harvard.mobihabibi.perm.PermissionsManager
 import edu.harvard.mobihabibi.steg.StegEngine
 import info.guardianproject.f5android.plugins.PluginNotificationListener
 import info.guardianproject.f5android.plugins.f5.james.JpegEncoder
@@ -30,17 +31,9 @@ import info.guardianproject.f5android.stego.StegoProcessThread
 import java.io.*
 import kotlin.concurrent.thread
 
-// import info.guardianproject.f5android.plugins.f5.james.JpegEncoder
-
 
 class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
-    // Storage Permissions
-    private val REQUEST_EXTERNAL_STORAGE = 1
     private val REQUEST_IMAGE_CAPTURE = 2
-    private val PERMISSIONS_STORAGE = arrayOf(
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
-    )
 
     private var secretBitmap: Bitmap? = null
     private var decoyBitmap: Bitmap? = null
@@ -52,6 +45,7 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
     private lateinit var progressBar: ProgressBar
     private lateinit var stegEngine: StegEngine
     private lateinit var imgEngine: ImageEngine
+    private lateinit var permManager: PermissionsManager
 
     companion object {
         private const val SECRET_PICK_CODE = 999
@@ -69,7 +63,8 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
         progressBar = findViewById(R.id.pbEnc)
         stegEngine = StegEngine(this, progressBar)
         imgEngine = ImageEngine(this)
-        verifyStoragePermissions(this)
+        permManager = PermissionsManager(this)
+        permManager.verifyStoragePermissions()
         btnUploadSecret.setOnClickListener {
             requestSecret()
         }
@@ -281,29 +276,6 @@ class EncryptActivity : AppCompatActivity(), PluginNotificationListener {
             // Save a file: path for use with ACTION_VIEW intents
             Log.d("DEBUG", "File created with path $absolutePath")
             decoyPath = absolutePath
-        }
-    }
-
-    /**
-     * Checks if the app has permission to write to device storage
-     *
-     * If the app does not has permission then the user will be prompted to grant permissions
-     *
-     * @param activity
-     */
-    fun verifyStoragePermissions(activity: Activity?) {
-        // Check if we have write permission
-        val permission = ActivityCompat.checkSelfPermission(
-            activity!!,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                activity,
-                PERMISSIONS_STORAGE,
-                REQUEST_EXTERNAL_STORAGE
-            )
         }
     }
 
