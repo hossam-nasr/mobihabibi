@@ -1,33 +1,37 @@
 package edu.harvard.mobihabibi
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.media.MediaScannerConnection
 import android.net.Uri
-import android.opengl.Visibility
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import edu.harvard.mobihabibi.img.ImageEngine
 import edu.harvard.mobihabibi.steg.StegEngine
 import java.io.File
-import java.io.FileOutputStream
 import kotlin.concurrent.thread
 
 
 class EncryptActivity : AppCompatActivity() {
+    // Storage Permissions
+    private val REQUEST_EXTERNAL_STORAGE = 1
+    private val PERMISSIONS_STORAGE = arrayOf(
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
+
     private var secretBitmap: Bitmap? = null
     private var decoyBitmap: Bitmap? = null
+    private var decoyFile: File? = null
     private var resBitmap: Bitmap? = null
     private lateinit var progressBar: ProgressBar
     private lateinit var stegEngine: StegEngine
@@ -93,6 +97,12 @@ class EncryptActivity : AppCompatActivity() {
     private fun processDecoy(uri: Uri) {
         findViewById<ImageView>(R.id.ivDecoy).setImageURI(uri)
         decoyBitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
+        if (uri.path != null) {
+            val path = ImageEngine.ImageFilePath.getPath(this, uri)
+            if (path != null) {
+                decoyFile = File(path)
+            }
+        }
     }
 
     private fun requestImage(code: Int) {
@@ -107,7 +117,10 @@ class EncryptActivity : AppCompatActivity() {
             thread {
                 resBitmap = stegEngine.encrypt(secretBitmap!!, decoyBitmap!!)
                 if (resBitmap != null) {
-                    imgEngine.saveImage(resBitmap!!)
+                    val imgFile = imgEngine.saveImage(resBitmap!!)
+                    if (imgFile != null && decoyFile != null) {
+                        imgEngine.copyExifData(decoyFile!!, imgFile, null)
+                    }
                     runOnUiThread {
                         findViewById<ImageView>(R.id.ivEncRes).setImageBitmap(resBitmap)
                     }
@@ -115,6 +128,29 @@ class EncryptActivity : AppCompatActivity() {
             }
         } else {
             Toast.makeText(this, "Please upload a secret and a decoy!", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /**
+     * Checks if the app has permission to write to device storage
+     *
+     * If the app does not has permission then the user will be prompted to grant permissions
+     *
+     * @param activity
+     */
+    fun verifyStoragePermissions(activity: Activity?) {
+        // Check if we have write permission
+        val permission = ActivityCompat.checkSelfPermission(
+            activity!!,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                activity,
+                PERMISSIONS_STORAGE,
+                REQUEST_EXTERNAL_STORAGE
+            )
         }
     }
 
